@@ -4,74 +4,376 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Baduk (Go)</title>
-    <link rel="icon" href="/favicon.ico" />
+    <meta
+      name="description"
+      content="Play and practice Go (Baduk) in your browser with captures, ko, scoring, SGF import and export, and game replay."
+    />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#f4f2ec" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#13120f" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="apple-touch-icon" href="/images/apple-touch-icon.png" />
+    <script>
+      // Apply the saved theme before first paint to avoid a flash of the wrong theme.
+      try {
+        var o = JSON.parse(localStorage.getItem('baduk:options:v2') || '{}');
+        if (o.theme === 'light' || o.theme === 'dark')
+          document.documentElement.setAttribute('data-theme', o.theme);
+      } catch (e) {}
+    </script>
     <link rel="stylesheet" href="/src/style.css" />
   </head>
   <body>
-    <header>
-      <h1>Baduk <small>Go / Weiqi</small></h1>
+    <svg class="sprite" aria-hidden="true" focusable="false">
+      <symbol id="i-logo" viewBox="0 0 64 64">
+        <rect width="64" height="64" rx="14" fill="#d9b25f" />
+        <path d="M32 8v48M8 32h48" stroke="#3a2a10" stroke-width="2" opacity=".55" />
+        <circle cx="24" cy="26" r="13" fill="#111" />
+        <circle cx="40" cy="38" r="13" fill="#f7f7f7" stroke="#bdbdbd" stroke-width="1.5" />
+      </symbol>
+      <symbol id="i-undo" viewBox="0 0 24 24">
+        <path d="M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11" />
+      </symbol>
+      <symbol id="i-pass" viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5" /></symbol>
+      <symbol id="i-score" viewBox="0 0 24 24"><path d="M5 21V11M12 21V4M19 21v-7" /></symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></symbol>
+      <symbol id="i-first" viewBox="0 0 24 24"><path d="M6 5v14M18 6l-8 6 8 6" /></symbol>
+      <symbol id="i-prev" viewBox="0 0 24 24"><path d="m15 6-6 6 6 6" /></symbol>
+      <symbol id="i-next" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6" /></symbol>
+      <symbol id="i-last" viewBox="0 0 24 24"><path d="M18 5v14M6 6l8 6-8 6" /></symbol>
+      <symbol id="i-open" viewBox="0 0 24 24">
+        <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+      </symbol>
+      <symbol id="i-save" viewBox="0 0 24 24"><path d="M12 4v12M7 11l5 5 5-5M5 20h14" /></symbol>
+      <symbol id="i-settings" viewBox="0 0 24 24">
+        <path d="M4 6h8M16 6h4M4 12h2M10 12h10M4 18h10M18 18h2" />
+        <circle cx="14" cy="6" r="2" />
+        <circle cx="8" cy="12" r="2" />
+        <circle cx="16" cy="18" r="2" />
+      </symbol>
+      <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></symbol>
+      <symbol id="i-sun" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="4" />
+        <path
+          d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"
+        />
+      </symbol>
+      <symbol id="i-moon" viewBox="0 0 24 24">
+        <path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z" />
+      </symbol>
+      <symbol id="i-monitor" viewBox="0 0 24 24">
+        <rect x="3" y="4" width="18" height="12" rx="2" />
+        <path d="M8 20h8M12 16v4" />
+      </symbol>
+    </svg>
+
+    <a class="skip-link" href="#board" data-i18n="skip.link">Skip to the board</a>
+
+    <header class="site-header">
+      <div class="container header-inner">
+        <div class="brand">
+          <svg class="brand-mark" aria-hidden="true"><use href="#i-logo" /></svg>
+          <div class="brand-text">
+            <span class="brand-name" data-i18n="app.name">Baduk</span>
+            <span class="brand-tagline" data-i18n="app.tagline">Go practice board</span>
+          </div>
+        </div>
+        <button id="open-settings" class="btn btn-ghost" type="button" aria-haspopup="dialog">
+          <svg class="icon" aria-hidden="true"><use href="#i-settings" /></svg>
+          <span data-i18n="header.settings">Settings</span>
+        </button>
+      </div>
     </header>
-    <main>
-      <section class="board-wrap">
-        <div id="board"></div>
-        <p id="status" role="status" aria-live="polite"></p>
-        <p id="message" role="alert"></p>
+
+    <main class="container layout">
+      <h1 class="sr-only" data-i18n="app.title">Baduk (Go)</h1>
+
+      <section class="board-column">
+        <div class="status-bar" aria-live="off">
+          <div class="turn">
+            <span id="turn-stone" class="dot dot-black" aria-hidden="true"></span>
+            <span id="turn-text" class="turn-text"></span>
+          </div>
+          <span id="move-text" class="chip"></span>
+          <span class="captures">
+            <span id="cap-black" class="chip"
+              ><span class="dot dot-black" aria-hidden="true"></span
+              ><span id="cap-black-n">0</span></span
+            >
+            <span id="cap-white" class="chip"
+              ><span class="dot dot-white" aria-hidden="true"></span
+              ><span id="cap-white-n">0</span></span
+            >
+          </span>
+        </div>
+
+        <div class="board-card"><div id="board"></div></div>
+        <p id="board-hint" class="sr-only" data-i18n="board.hint"></p>
+        <div id="message" class="message" role="status"></div>
       </section>
 
-      <section class="panel">
-        <fieldset>
-          <legend>Game</legend>
-          <div class="row">
-            <button id="undo" type="button">Undo</button>
-            <button id="pass" type="button">Pass</button>
-            <button id="score" type="button">Score</button>
+      <div class="side-column">
+        <section class="card" aria-labelledby="game-title">
+          <h2 id="game-title" class="card-title" data-i18n="game.title">Game</h2>
+          <div class="button-row three">
+            <button id="undo" class="btn btn-stack" type="button">
+              <svg class="icon" aria-hidden="true"><use href="#i-undo" /></svg>
+              <span data-i18n="game.undo">Undo</span>
+            </button>
+            <button id="pass" class="btn btn-stack" type="button">
+              <svg class="icon" aria-hidden="true"><use href="#i-pass" /></svg>
+              <span data-i18n="game.pass">Pass</span>
+            </button>
+            <button id="score" class="btn btn-stack" type="button">
+              <svg class="icon" aria-hidden="true"><use href="#i-score" /></svg>
+              <span data-i18n="game.score">Score</span>
+            </button>
           </div>
-          <div class="row">
-            <select id="size" aria-label="Board size">
-              <option value="19">19×19</option>
-              <option value="13">13×13</option>
-              <option value="9">9×9</option>
-            </select>
-            <button id="new" type="button">New game</button>
+          <div class="new-game">
+            <label class="field">
+              <span class="field-label" data-i18n="game.size">Board size</span>
+              <select id="size" class="select">
+                <option value="19">19 × 19</option>
+                <option value="13">13 × 13</option>
+                <option value="9">9 × 9</option>
+              </select>
+            </label>
+            <button id="new" class="btn btn-primary" type="button">
+              <svg class="icon" aria-hidden="true"><use href="#i-plus" /></svg>
+              <span data-i18n="game.new">New game</span>
+            </button>
+          </div>
+        </section>
+
+        <section class="card" aria-labelledby="record-title">
+          <h2 id="record-title" class="card-title" data-i18n="record.title">Game record</h2>
+          <div class="button-row four">
+            <button
+              id="first"
+              class="btn btn-icon"
+              type="button"
+              data-i18n-aria-label="record.first"
+              data-i18n-title="record.first"
+            >
+              <svg class="icon" aria-hidden="true"><use href="#i-first" /></svg>
+            </button>
+            <button
+              id="back"
+              class="btn btn-icon"
+              type="button"
+              data-i18n-aria-label="record.prev"
+              data-i18n-title="record.prev"
+            >
+              <svg class="icon" aria-hidden="true"><use href="#i-prev" /></svg>
+            </button>
+            <button
+              id="forward"
+              class="btn btn-icon"
+              type="button"
+              data-i18n-aria-label="record.next"
+              data-i18n-title="record.next"
+            >
+              <svg class="icon" aria-hidden="true"><use href="#i-next" /></svg>
+            </button>
+            <button
+              id="last"
+              class="btn btn-icon"
+              type="button"
+              data-i18n-aria-label="record.last"
+              data-i18n-title="record.last"
+            >
+              <svg class="icon" aria-hidden="true"><use href="#i-last" /></svg>
+            </button>
+          </div>
+          <input
+            id="scrub"
+            class="scrub"
+            type="range"
+            min="0"
+            max="0"
+            value="0"
+            data-i18n-aria-label="record.scrub"
+          />
+          <div class="button-row two">
+            <label class="btn" for="open">
+              <svg class="icon" aria-hidden="true"><use href="#i-open" /></svg>
+              <span data-i18n="record.open">Open SGF</span>
+            </label>
+            <input id="open" class="file-input" type="file" accept=".sgf,text/plain" />
+            <button id="save" class="btn" type="button">
+              <svg class="icon" aria-hidden="true"><use href="#i-save" /></svg>
+              <span data-i18n="record.save">Save SGF</span>
+            </button>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <span data-i18n="footer.license">Released under the GPL-3.0-or-later license.</span>
+        <span class="footer-links">
+          <a href="https://github.com/hbjorn37/baduk" data-i18n="footer.source">Source code</a>
+          <span id="version"></span>
+        </span>
+      </div>
+    </footer>
+
+    <dialog id="settings" class="dialog" aria-labelledby="settings-title">
+      <div class="dialog-body">
+        <div class="dialog-head">
+          <h2 id="settings-title" data-i18n="settings.title">Settings</h2>
+          <button
+            id="close-settings"
+            class="btn btn-icon btn-ghost"
+            type="button"
+            data-i18n-aria-label="settings.close"
+            data-i18n-title="settings.close"
+          >
+            <svg class="icon" aria-hidden="true"><use href="#i-close" /></svg>
+          </button>
+        </div>
+
+        <fieldset class="group">
+          <legend data-i18n="settings.language">Language</legend>
+          <select id="language" class="select select-wide" data-i18n-aria-label="settings.language">
+            <option value="auto" data-i18n="settings.languageAuto">
+              Automatic (browser language)
+            </option>
+            <!-- locale options are added by main.ts from LOCALE_NAMES -->
+          </select>
+        </fieldset>
+
+        <fieldset class="group">
+          <legend data-i18n="settings.appearance">Appearance</legend>
+          <div class="segmented">
+            <label
+              ><input type="radio" name="theme" value="system" /><span
+                ><svg class="icon" aria-hidden="true"><use href="#i-monitor" /></svg
+                ><span data-i18n="theme.system">System</span></span
+              ></label
+            >
+            <label
+              ><input type="radio" name="theme" value="light" /><span
+                ><svg class="icon" aria-hidden="true"><use href="#i-sun" /></svg
+                ><span data-i18n="theme.light">Light</span></span
+              ></label
+            >
+            <label
+              ><input type="radio" name="theme" value="dark" /><span
+                ><svg class="icon" aria-hidden="true"><use href="#i-moon" /></svg
+                ><span data-i18n="theme.dark">Dark</span></span
+              ></label
+            >
           </div>
         </fieldset>
 
-        <fieldset>
-          <legend>Record</legend>
-          <div class="row">
-            <button id="first" type="button" aria-label="First move">⏮</button>
-            <button id="back" type="button" aria-label="Previous move">◀</button>
-            <button id="forward" type="button" aria-label="Next move">▶</button>
-            <button id="last" type="button" aria-label="Last move">⏭</button>
-          </div>
-          <div class="row">
-            <label class="button"
-              >Open SGF<input id="open" type="file" accept=".sgf,text/plain" hidden
-            /></label>
-            <button id="save" type="button">Save SGF</button>
-          </div>
-        </fieldset>
-
-        <fieldset>
-          <legend>Stone color</legend>
-          <label><input type="radio" name="color" value="auto" checked /> Auto (alternate)</label>
-          <label><input type="radio" name="color" value="black" /> Black</label>
-          <label><input type="radio" name="color" value="white" /> White</label>
-          <label
-            ><input type="radio" name="color" value="mouse" /> Mouse (left = white, right =
-            black)</label
+        <fieldset class="group">
+          <legend data-i18n="settings.stones">Stone color</legend>
+          <label class="choice"
+            ><input type="radio" name="color" value="auto" /><span data-i18n="stones.auto"
+              >Alternate automatically</span
+            ></label
+          >
+          <label class="choice"
+            ><input type="radio" name="color" value="black" /><span data-i18n="stones.black"
+              >Always black</span
+            ></label
+          >
+          <label class="choice"
+            ><input type="radio" name="color" value="white" /><span data-i18n="stones.white"
+              >Always white</span
+            ></label
+          >
+          <label class="choice"
+            ><input type="radio" name="color" value="mouse" /><span data-i18n="stones.mouse"
+              >Mouse buttons: left is white, right is black</span
+            ></label
           >
         </fieldset>
 
-        <fieldset>
-          <legend>Display</legend>
-          <label><input id="showStones" type="checkbox" checked /> Show stones</label>
-          <label><input id="showNumbers" type="checkbox" checked /> Move numbers</label>
+        <fieldset class="group">
+          <legend data-i18n="settings.display">Display</legend>
+          <label class="choice"
+            ><input id="showStones" type="checkbox" /><span data-i18n="display.stones"
+              >Show stones</span
+            ></label
+          >
+          <label class="choice"
+            ><input id="showNumbers" type="checkbox" /><span data-i18n="display.numbers"
+              >Show move numbers</span
+            ></label
+          >
         </fieldset>
-      </section>
-    </main>
-    <footer><p>© 2013–2026 gizrak · GPL-3.0</p></footer>
+
+        <section class="group" aria-labelledby="shortcuts-title">
+          <h3 id="shortcuts-title" class="legend-like" data-i18n="settings.shortcuts">
+            Keyboard shortcuts
+          </h3>
+          <dl class="shortcuts">
+            <div>
+              <dt data-i18n="shortcut.move">Move the cursor</dt>
+              <dd><kbd>←</kbd> <kbd>↑</kbd> <kbd>→</kbd> <kbd>↓</kbd></dd>
+            </div>
+            <div>
+              <dt data-i18n="shortcut.place">Place a stone</dt>
+              <dd><kbd>Enter</kbd> / <kbd>Space</kbd></dd>
+            </div>
+            <div>
+              <dt data-i18n="shortcut.undo">Undo</dt>
+              <dd><kbd>U</kbd> / <kbd>Backspace</kbd></dd>
+            </div>
+            <div>
+              <dt data-i18n="shortcut.pass">Pass</dt>
+              <dd><kbd>P</kbd></dd>
+            </div>
+            <div>
+              <dt data-i18n="shortcut.step">Previous / next move</dt>
+              <dd><kbd>Page Up</kbd> / <kbd>Page Down</kbd></dd>
+            </div>
+            <div>
+              <dt data-i18n="shortcut.jump">First / last move</dt>
+              <dd><kbd>Home</kbd> / <kbd>End</kbd></dd>
+            </div>
+          </dl>
+        </section>
+
+        <div class="dialog-actions">
+          <button id="reset-settings" class="btn" type="button" data-i18n="settings.reset">
+            Reset to defaults
+          </button>
+          <button
+            id="done-settings"
+            class="btn btn-primary"
+            type="button"
+            data-i18n="settings.done"
+          >
+            Done
+          </button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog
+      id="confirm-new"
+      class="dialog dialog-small"
+      aria-labelledby="confirm-title"
+      aria-describedby="confirm-body"
+    >
+      <form method="dialog" class="dialog-body">
+        <h2 id="confirm-title" data-i18n="confirm.newTitle">Start a new game?</h2>
+        <p id="confirm-body" data-i18n="confirm.newBody"></p>
+        <div class="dialog-actions">
+          <button class="btn" value="cancel" data-i18n="confirm.cancel">Cancel</button>
+          <button class="btn btn-primary" value="ok" data-i18n="confirm.newOk">
+            Start new game
+          </button>
+        </div>
+      </form>
+    </dialog>
+
+    <div id="announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

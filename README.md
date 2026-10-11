@@ -2,20 +2,33 @@
 
 ![Baduk](docs/images/baduk-1.png)
 
-**Baduk (Go)** is a web app for practicing the game of Go and working with game records. I first built it in 2012 with plain HTML5 and JavaScript so my father could enjoy the game online, and rewrote it from scratch in TypeScript for v2.0.
+**Baduk (Go)** is a web app for practicing the game of Go and working with game records. I first built it in 2012 with plain HTML5 and JavaScript so my father could enjoy the game online, and rewrote it from scratch in TypeScript for v2.0. v2.1 adds multiple languages, themes and a new accessible design.
 
 **https://hbjorn.dev/baduk/**
 
 ## Features
 
+**Play and practice**
 - Alternating play, captures, suicide prevention and simple ko
 - Stone color modes: auto / black / white / mouse (left click = white, right click = black), handy for solo practice and setting up problems
 - Move numbers, last-move marker, show/hide stones
 - Undo, pass, area scoring with komi
 - 9×9, 13×13 and 19×19 boards
-- Open and save SGF files; step through a game (first / previous / next / last)
+
+**Game records**
+- Open and save SGF files
+- Step through a game with the first / previous / next / last buttons or a slider
 - The game is saved in the browser and survives a reload
-- Desktop and mobile (touch), board scales to the screen width, dark mode
+
+**Multilingual**
+- English, Korean (한국어), Japanese (日本語), Simplified Chinese (简体中文) and Traditional Chinese (繁體中文)
+- The language is picked automatically from the browser's language settings and can be changed in **Settings**
+
+**Appearance and accessibility**
+- Light, dark or system theme, chosen in **Settings**
+- Responsive layout for desktop and mobile; touch friendly
+- Fully playable with the keyboard (arrow keys move a cursor, Enter places a stone) with screen reader announcements
+- Visible focus indicators, WCAG AA contrast, respects reduced-motion preferences
 
 ### Limitations
 
@@ -26,7 +39,13 @@
 
 ## Screenshots
 
-<img src="docs/images/baduk-2.png" alt="Mobile view" width="320" />
+| Light | Dark |
+| --- | --- |
+| ![Light theme](docs/images/baduk-1.png) | ![Dark theme](docs/images/baduk-3.png) |
+
+| Mobile | Settings (Korean) |
+| --- | --- |
+| <img src="docs/images/baduk-2.png" alt="Mobile view" width="320" /> | ![Settings dialog in Korean](docs/images/baduk-4.png) |
 
 ## Development
 
@@ -51,11 +70,16 @@ src/core/   Pure TypeScript with no DOM access. All game rules live here and are
   score.ts    area scoring
   sgf.ts      SGF parser and serializer
   record.ts   SGF <-> Game conversion
-src/ui/     SVG board rendering, input handling, localStorage
+src/i18n/   Translation catalogs (en, ko, ja, zh-CN, zh-TW) and locale detection
+src/ui/     SVG board rendering and keyboard input, theme, DOM translation, localStorage
 src/main.ts wires the UI to the core
 ```
 
 There are no runtime dependencies. Only the UI layer would need to change to move to a framework such as React.
+
+### Translations
+
+Every user-visible string lives in `src/i18n/`. `en.ts` is the source of truth; add a key there and to every other locale file (the compiler rejects missing keys and a test checks that placeholders match). To add a language, create a catalog, register it in `src/i18n/index.ts` (`LOCALES`, `LOCALE_NAMES`, `matchLocale`) and add it to the tests.
 
 ### Deployment
 

@@ -1,3 +1,4 @@
+import { SgfError } from './errors';
 import { BLACK, WHITE, type Color, type Move, type Point } from './types';
 
 export interface SgfGame {
@@ -52,14 +53,16 @@ function parseTree(text: string, start: number): { tree: Tree; end: number } {
       out += text[i];
       i += 1;
     }
-    if (i >= text.length) throw new Error('Unterminated SGF property value.');
+    if (i >= text.length)
+      throw new SgfError('unterminated-value', 'Unterminated SGF property value.');
     i += 1; // ']'
     return out;
   };
 
   for (;;) {
     skipSpace();
-    if (i >= text.length) throw new Error('Unterminated SGF variation.');
+    if (i >= text.length)
+      throw new SgfError('unterminated-variation', 'Unterminated SGF variation.');
     const c = text[i];
     if (c === ')') return { tree, end: i + 1 };
     if (c === '(') {
@@ -93,7 +96,7 @@ function parseTree(text: string, start: number): { tree: Tree; end: number } {
 /** Flattens the first game's main line (the first variation at each branch) into a node list. */
 function parseMainLine(text: string): Props[] {
   const open = text.indexOf('(');
-  if (open < 0) throw new Error('Not an SGF file: no "(" found.');
+  if (open < 0) throw new SgfError('not-sgf', 'Not an SGF file: no "(" found.');
   const nodes: Props[] = [];
   let tree: Tree | undefined = parseTree(text, open).tree;
   while (tree) {
@@ -124,11 +127,13 @@ const INFO_KEYS = ['GN', 'PB', 'PW', 'BR', 'WR', 'DT', 'PC', 'RE', 'RU', 'EV', '
 export function parseSgf(text: string): SgfGame {
   const nodes = parseMainLine(text);
   const root = nodes[0];
-  if (!root) throw new Error('The SGF contains no nodes.');
+  if (!root) throw new SgfError('no-nodes', 'The SGF contains no nodes.');
 
   const size = Number.parseInt(root.SZ?.[0] ?? '19', 10);
   if (!Number.isInteger(size) || size < 2 || size > 25) {
-    throw new Error(`Unsupported board size: ${root.SZ?.[0]}`);
+    throw new SgfError('unsupported-size', `Unsupported board size: ${root.SZ?.[0]}`, {
+      size: root.SZ?.[0] ?? '',
+    });
   }
   const komi = Number.parseFloat(root.KM?.[0] ?? '0') || 0;
 

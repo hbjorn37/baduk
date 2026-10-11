@@ -118,6 +118,21 @@ describe('Game', () => {
     expect(g.allMoves.length).toBe(2);
   });
 
+  it('goTo jumps within the record and clamps out-of-range values', () => {
+    const g = new Game({ size: 9 });
+    g.play(at(0, 0));
+    g.play(at(1, 1));
+    g.play(at(2, 2));
+    expect(g.totalMoves).toBe(3);
+    g.goTo(1);
+    expect(g.moveNumber).toBe(1);
+    expect(g.totalMoves).toBe(3);
+    g.goTo(99);
+    expect(g.moveNumber).toBe(3);
+    g.goTo(-5);
+    expect(g.moveNumber).toBe(0);
+  });
+
   it('two consecutive passes end the game', () => {
     const g = new Game({ size: 9 });
     g.pass();

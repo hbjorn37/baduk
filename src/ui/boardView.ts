@@ -1,8 +1,8 @@
+import { COLUMN_LABELS } from '../core/coords';
 import type { GameState } from '../core/game';
 import { BLACK, EMPTY, WHITE, type Color, type Move, type Point } from '../core/types';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
-const COLUMN_LABELS = 'ABCDEFGHJKLMNOPQRSTUVWXYZ'; // By convention, 'I' is skipped
 
 export interface ViewOptions {
   showStones: boolean;
@@ -10,8 +10,10 @@ export interface ViewOptions {
 }
 
 export interface BoardViewHandlers {
-  /** button: 0 = left click / touch, 2 = right click */
+  /** button: 0 = left click / touch / Enter, 2 = right click / Shift+Enter */
   onPoint(point: Point, button: number): void;
+  /** Called when the keyboard cursor moves or the board receives keyboard focus. */
+  onCursor?(point: Point): void;
 }
 
 function el<K extends keyof SVGElementTagNameMap>(
@@ -41,20 +43,26 @@ export function starPoints(size: number): Point[] {
  * SVG Go board. One grid cell is one unit in the coordinate system, and the outer
  * one-unit margin holds the coordinate labels. The rendered size is set by CSS
  * (container width), so no resize code is needed.
+ *
+ * Keyboard support: the board is focusable; arrow keys move a cursor and Enter or
+ * Space places a stone (Shift+Enter acts as the right mouse button).
  */
 export class BoardView {
   private svg: SVGSVGElement;
   private size = 0;
   private stonesLayer = el('g');
   private hover = el('circle', { class: 'hover', r: 0.46 });
+  private cursorMark = el('g', { class: 'cursor' });
   private hoverPoint: Point | null = null;
   private hoverColor: Color = BLACK;
+  private cursor: Point = { x: 0, y: 0 };
+  private canPlace: (p: Point) => boolean = () => true;
 
   constructor(
     container: HTMLElement,
     private handlers: BoardViewHandlers,
   ) {
-    this.svg = el('svg', { class: 'board', role: 'img', 'aria-label': 'Go board' });
+    this.svg = el('svg', { class: 'board', tabindex: 0, role: 'application' });
     container.replaceChildren(this.svg);
 
     this.svg.addEventListener('pointerup', (e) => {
@@ -76,15 +84,35 @@ export class BoardView {
       this.hoverPoint = null;
       this.updateHover();
     });
+    this.svg.addEventListener('keydown', (e) => this.onKeyDown(e));
+    this.svg.addEventListener('focus', () => {
+      this.hoverPoint = this.cursor;
+      this.updateHover();
+      this.handlers.onCursor?.(this.cursor);
+    });
+    this.svg.addEventListener('blur', () => {
+      this.hoverPoint = null;
+      this.updateHover();
+    });
   }
 
-  /** Updates the hover preview stone's color and which points accept a stone. */
+  /** Sets the accessible name and the id of the element that describes the board. */
+  setAccessibleText(label: string, describedBy: string): void {
+    this.svg.setAttribute('aria-label', label);
+    this.svg.setAttribute('aria-roledescription', label);
+    this.svg.setAttribute('aria-describedby', describedBy);
+  }
+
+  focus(): void {
+    this.svg.focus();
+  }
+
+  /** Updates the hover/cursor preview stone's color and which points accept a stone. */
   setHover(color: Color, canPlace: (p: Point) => boolean): void {
     this.hoverColor = color;
     this.canPlace = canPlace;
     this.updateHover();
   }
-  private canPlace: (p: Point) => boolean = () => true;
 
   render(state: GameState, moves: Move[], opts: ViewOptions): void {
     const size = state.board.size;
@@ -101,14 +129,15 @@ export class BoardView {
     for (const p of state.board.points()) {
       const cell = state.board.get(p);
       if (cell === EMPTY) continue;
-      const stone = el('circle', {
-        cx: p.x + 1,
-        cy: p.y + 1,
-        r: 0.48,
-        fill: cell === BLACK ? 'url(#stone-black)' : 'url(#stone-white)',
-        class: 'stone',
-      });
-      this.stonesLayer.append(stone);
+      this.stonesLayer.append(
+        el('circle', {
+          cx: p.x + 1,
+          cy: p.y + 1,
+          r: 0.48,
+          fill: cell === BLACK ? 'url(#stone-black)' : 'url(#stone-white)',
+          class: 'stone',
+        }),
+      );
 
       const n = numbers.get(p.y * size + p.x);
       if (opts.showNumbers && n !== undefined) {
@@ -140,13 +169,14 @@ export class BoardView {
 
   private buildGrid(size: number): void {
     this.size = size;
+    this.cursor = { x: Math.floor((size - 1) / 2), y: Math.floor((size - 1) / 2) };
     const span = size + 1;
     this.svg.replaceChildren();
     this.svg.setAttribute('viewBox', `0 0 ${span} ${span}`);
 
     const defs = el('defs');
     defs.append(
-      this.gradient('stone-black', '#777', '#000'),
+      this.gradient('stone-black', '#7a7a7a', '#000'),
       this.gradient('stone-white', '#fff', '#c8c8c8'),
     );
     this.svg.append(defs);
@@ -155,12 +185,12 @@ export class BoardView {
       el('rect', { x: 0, y: 0, width: span, height: span, class: 'wood' }),
       el('image', {
         href: `${import.meta.env.BASE_URL}images/pvc_wood_pattern_sheet.jpg`,
+        class: 'wood-texture',
         x: 0,
         y: 0,
         width: span,
         height: span,
         preserveAspectRatio: 'xMidYMid slice',
-        opacity: 0.7,
       }),
     );
 
@@ -181,6 +211,7 @@ export class BoardView {
       class: 'labels',
       'text-anchor': 'middle',
       'dominant-baseline': 'central',
+      'aria-hidden': 'true',
     });
     for (let i = 0; i < size; i++) {
       const col = COLUMN_LABELS[i] ?? '';
@@ -196,7 +227,14 @@ export class BoardView {
         labels.append(t);
       }
     }
-    this.svg.append(labels, this.stonesLayer, this.hover);
+
+    // Keyboard cursor: a dark outline under a light one stays visible on any background.
+    this.cursorMark.replaceChildren(
+      el('rect', { class: 'cursor-outer', width: 0.94, height: 0.94, rx: 0.12 }),
+      el('rect', { class: 'cursor-inner', width: 0.94, height: 0.94, rx: 0.12 }),
+    );
+    this.svg.append(labels, this.stonesLayer, this.hover, this.cursorMark);
+    this.updateCursor();
   }
 
   private gradient(id: string, light: string, dark: string): SVGRadialGradientElement {
@@ -206,6 +244,37 @@ export class BoardView {
       el('stop', { offset: '100%', 'stop-color': dark }),
     );
     return g;
+  }
+
+  private onKeyDown(e: KeyboardEvent): void {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const delta: Record<string, [number, number]> = {
+      ArrowLeft: [-1, 0],
+      ArrowRight: [1, 0],
+      ArrowUp: [0, -1],
+      ArrowDown: [0, 1],
+    };
+    const move = delta[e.key];
+    if (move) {
+      e.preventDefault();
+      const x = Math.max(0, Math.min(this.size - 1, this.cursor.x + move[0]));
+      const y = Math.max(0, Math.min(this.size - 1, this.cursor.y + move[1]));
+      this.cursor = { x, y };
+      this.hoverPoint = this.cursor;
+      this.updateCursor();
+      this.updateHover();
+      this.handlers.onCursor?.(this.cursor);
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      this.handlers.onPoint(this.cursor, e.shiftKey ? 2 : 0);
+    }
+  }
+
+  private updateCursor(): void {
+    this.cursorMark.setAttribute(
+      'transform',
+      `translate(${this.cursor.x + 1 - 0.47} ${this.cursor.y + 1 - 0.47})`,
+    );
   }
 
   private updateHover(): void {
