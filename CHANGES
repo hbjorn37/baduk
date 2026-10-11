@@ -1,3 +1,12 @@
+2.1 - 2026-10-11
+-------------------
+* Multilingual UI: English, Korean, Japanese, Simplified and Traditional Chinese; chosen automatically from the browser language and changeable in Settings
+* New Settings menu: language, light/dark/system theme, stone color mode, display options, keyboard shortcut reference
+* Redesigned, general-purpose site layout for desktop and mobile, with light and dark themes
+* Accessibility: keyboard play with a board cursor, screen reader announcements, visible focus, WCAG AA contrast, reduced-motion support, no axe-core violations
+* Game record slider, confirmation before discarding a game, SGF errors shown in the selected language
+* New favicon; the footer shows the app version
+
 2.0 - 2026-10-11
 -------------------
 * Rewritten from scratch in TypeScript + Vite; jQuery, requirejs and Express removed, no runtime dependencies

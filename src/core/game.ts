@@ -60,6 +60,11 @@ export class Game {
     return this.cursor;
   }
 
+  /** Number of moves in the whole record, including moves after the cursor. */
+  get totalMoves(): number {
+    return this.states.length - 1;
+  }
+
   get canBack(): boolean {
     return this.cursor > 0;
   }
@@ -136,6 +141,11 @@ export class Game {
     if (!this.canForward) return false;
     this.cursor += 1;
     return true;
+  }
+
+  /** Moves the cursor to move number n, clamped to the valid range. */
+  goTo(n: number): void {
+    this.cursor = Math.max(0, Math.min(this.states.length - 1, Math.trunc(n)));
   }
 
   first(): void {

@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { SgfError } from './errors';
 import { Game } from './game';
+import { gameFromSgf } from './record';
 import { decodePoint, encodePoint, parseSgf, serializeSgf } from './sgf';
 import { BLACK, WHITE } from './types';
 
@@ -49,6 +51,22 @@ describe('sgf', () => {
     expect(() => parseSgf('hello')).toThrow();
     expect(() => parseSgf('(;SZ[9];B[aa')).toThrow();
     expect(() => parseSgf('(;SZ[1])')).toThrow();
+  });
+
+  it('reports a machine-readable error code for the UI to translate', () => {
+    const code = (fn: () => unknown): string | undefined => {
+      try {
+        fn();
+      } catch (e) {
+        return e instanceof SgfError ? e.code : undefined;
+      }
+      return undefined;
+    };
+    expect(code(() => parseSgf('hello'))).toBe('not-sgf');
+    expect(code(() => parseSgf('(;SZ[9];B[aa'))).toBe('unterminated-value');
+    expect(code(() => parseSgf('(;SZ[9];B[aa]'))).toBe('unterminated-variation');
+    expect(code(() => parseSgf('(;SZ[1])'))).toBe('unsupported-size');
+    expect(code(() => gameFromSgf('(;SZ[9];B[aa];W[ba];B[ab];W[ab])'))).toBe('illegal-move');
   });
 
   it('round-trips through serialization', () => {

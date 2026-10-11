@@ -1,10 +1,16 @@
+import { isLocale, type LocalePreference } from '../i18n';
+
 export type ColorMode = 'auto' | 'black' | 'white' | 'mouse';
+export type ThemePreference = 'system' | 'light' | 'dark';
 
 export interface Options {
   colorMode: ColorMode;
   showStones: boolean;
   showNumbers: boolean;
   size: number;
+  /** 'auto' follows the browser language */
+  locale: LocalePreference;
+  theme: ThemePreference;
 }
 
 export const DEFAULT_OPTIONS: Options = {
@@ -12,12 +18,15 @@ export const DEFAULT_OPTIONS: Options = {
   showStones: true,
   showNumbers: true,
   size: 19,
+  locale: 'auto',
+  theme: 'system',
 };
 
-const OPTIONS_KEY = 'baduk:options:v2';
+export const OPTIONS_KEY = 'baduk:options:v2';
 const GAME_KEY = 'baduk:game:v2';
 
 const COLOR_MODES: readonly string[] = ['auto', 'black', 'white', 'mouse'];
+const THEMES: readonly string[] = ['system', 'light', 'dark'];
 
 function read(key: string): string | null {
   try {
@@ -54,6 +63,11 @@ export function loadOptions(): Options {
     showStones: typeof data.showStones === 'boolean' ? data.showStones : d.showStones,
     showNumbers: typeof data.showNumbers === 'boolean' ? data.showNumbers : d.showNumbers,
     size: [9, 13, 19].includes(data.size as number) ? (data.size as number) : d.size,
+    locale: data.locale === 'auto' || isLocale(data.locale) ? data.locale : d.locale,
+    theme:
+      typeof data.theme === 'string' && THEMES.includes(data.theme)
+        ? (data.theme as ThemePreference)
+        : d.theme,
   };
 }
 

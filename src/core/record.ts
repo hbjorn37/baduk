@@ -1,3 +1,4 @@
+import { SgfError } from './errors';
 import { Game } from './game';
 import { parseSgf, serializeSgf, type SgfGame } from './sgf';
 
@@ -11,7 +12,12 @@ export function gameFromSgf(text: string): { game: Game; info: Record<string, st
       return;
     }
     const r = game.play(m.point, m.color);
-    if (!r.ok) throw new Error(`Move ${i + 1} is illegal (${r.reason}).`);
+    if (!r.ok) {
+      throw new SgfError('illegal-move', `Move ${i + 1} is illegal (${r.reason}).`, {
+        n: i + 1,
+        reason: r.reason,
+      });
+    }
   });
   game.first();
   return { game, info: sgf.info };
