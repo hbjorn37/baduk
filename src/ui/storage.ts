@@ -23,7 +23,7 @@ function read(key: string): string | null {
   try {
     return localStorage.getItem(key);
   } catch {
-    return null; // 사생활 보호 모드 등에서는 저장소를 쓸 수 없다.
+    return null; // Storage may be unavailable, e.g. in private browsing.
   }
 }
 
@@ -31,11 +31,11 @@ function write(key: string, value: string): void {
   try {
     localStorage.setItem(key, value);
   } catch {
-    /* 저장 실패는 치명적이지 않다 */
+    /* A failed save is not fatal */
   }
 }
 
-/** 저장된 값이 깨졌거나 스키마가 달라도 항목별로 기본값으로 대체한다. */
+/** Falls back to defaults per field when stored data is corrupt or has a different schema. */
 export function loadOptions(): Options {
   const raw = read(OPTIONS_KEY);
   if (!raw) return { ...DEFAULT_OPTIONS };

@@ -1,16 +1,16 @@
 <!doctype html>
-<html lang="ko">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>바둑 Baduk</title>
+    <title>Baduk (Go)</title>
     <link rel="icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" href="/images/apple-touch-icon.png" />
     <link rel="stylesheet" href="/src/style.css" />
   </head>
   <body>
     <header>
-      <h1>바둑 <small>Baduk (Go)</small></h1>
+      <h1>Baduk <small>Go / Weiqi</small></h1>
     </header>
     <main>
       <section class="board-wrap">
@@ -21,50 +21,53 @@
 
       <section class="panel">
         <fieldset>
-          <legend>대국</legend>
+          <legend>Game</legend>
           <div class="row">
-            <button id="undo" type="button">무르기</button>
-            <button id="pass" type="button">패스</button>
-            <button id="score" type="button">계가</button>
+            <button id="undo" type="button">Undo</button>
+            <button id="pass" type="button">Pass</button>
+            <button id="score" type="button">Score</button>
           </div>
           <div class="row">
-            <select id="size" aria-label="판 크기">
-              <option value="19">19줄</option>
-              <option value="13">13줄</option>
-              <option value="9">9줄</option>
+            <select id="size" aria-label="Board size">
+              <option value="19">19×19</option>
+              <option value="13">13×13</option>
+              <option value="9">9×9</option>
             </select>
-            <button id="new" type="button">새 대국</button>
+            <button id="new" type="button">New game</button>
           </div>
         </fieldset>
 
         <fieldset>
-          <legend>기보</legend>
+          <legend>Record</legend>
           <div class="row">
-            <button id="first" type="button" aria-label="처음">⏮</button>
-            <button id="back" type="button" aria-label="이전">◀</button>
-            <button id="forward" type="button" aria-label="다음">▶</button>
-            <button id="last" type="button" aria-label="마지막">⏭</button>
+            <button id="first" type="button" aria-label="First move">⏮</button>
+            <button id="back" type="button" aria-label="Previous move">◀</button>
+            <button id="forward" type="button" aria-label="Next move">▶</button>
+            <button id="last" type="button" aria-label="Last move">⏭</button>
           </div>
           <div class="row">
             <label class="button"
-              >SGF 열기<input id="open" type="file" accept=".sgf,text/plain" hidden
+              >Open SGF<input id="open" type="file" accept=".sgf,text/plain" hidden
             /></label>
-            <button id="save" type="button">SGF 저장</button>
+            <button id="save" type="button">Save SGF</button>
           </div>
         </fieldset>
 
         <fieldset>
-          <legend>돌 색</legend>
-          <label><input type="radio" name="color" value="auto" checked /> 자동(번갈아)</label>
-          <label><input type="radio" name="color" value="black" /> 흑</label>
-          <label><input type="radio" name="color" value="white" /> 백</label>
-          <label><input type="radio" name="color" value="mouse" /> 마우스 (좌=백, 우=흑)</label>
+          <legend>Stone color</legend>
+          <label><input type="radio" name="color" value="auto" checked /> Auto (alternate)</label>
+          <label><input type="radio" name="color" value="black" /> Black</label>
+          <label><input type="radio" name="color" value="white" /> White</label>
+          <label
+            ><input type="radio" name="color" value="mouse" /> Mouse (left = white, right =
+            black)</label
+          >
         </fieldset>
 
         <fieldset>
-          <legend>표시</legend>
-          <label><input id="showStones" type="checkbox" checked /> 돌 보기</label>
-          <label><input id="showNumbers" type="checkbox" checked /> 수순 번호</label>
+          <legend>Display</legend>
+          <label><input id="showStones" type="checkbox" checked /> Show stones</label>
+          <label><input id="showNumbers" type="checkbox" checked /> Move numbers</label>
         </fieldset>
       </section>
     </main>

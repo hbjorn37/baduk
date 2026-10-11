@@ -4,20 +4,20 @@ import { BLACK, WHITE, opponent, type Color, type Move, type Point } from './typ
 
 export interface GameState {
   board: Board;
-  /** 이 상태에서 둘 차례 */
+  /** Color to play in this state */
   toPlay: Color;
-  /** 이 상태에 이르게 한 수. 초기 상태는 null */
+  /** The move that led to this state; null for the initial state */
   move: Move | null;
-  /** 직전 수로 따낸 돌 */
+  /** Stones captured by the previous move */
   captured: Point[];
-  /** 지금까지 따낸 돌 수(색 = 따낸 쪽) */
+  /** Prisoners taken so far (keyed by the capturing color) */
   prisoners: { black: number; white: number };
 }
 
 export interface GameOptions {
   size?: number;
   komi?: number;
-  /** 접바둑 등 초기 배치 돌 */
+  /** Initial stones, e.g. for handicap games */
   setup?: { black?: Point[]; white?: Point[] };
   firstColor?: Color;
 }
@@ -25,8 +25,9 @@ export interface GameOptions {
 export type MoveResult = { ok: true; captured: Point[] } | { ok: false; reason: IllegalReason };
 
 /**
- * 수순을 관리하는 대국. states[0]이 초기 상태이고 cursor가 현재 보고 있는 수순이다.
- * 기보 재생을 위해 cursor를 앞뒤로 움직일 수 있고, 중간에서 새 수를 두면 그 뒤는 버려진다.
+ * A game that manages the move sequence. states[0] is the initial state and cursor is the
+ * position currently shown. The cursor can move back and forth for record playback;
+ * playing a new move from the middle discards everything after it.
  */
 export class Game {
   readonly size: number;
@@ -45,7 +46,7 @@ export class Game {
       ...black.map((p): [Point, typeof BLACK] => [p, BLACK]),
       ...white.map((p): [Point, typeof WHITE] => [p, WHITE]),
     ]);
-    // 접바둑이면 백이 먼저 둔다.
+    // In a handicap game White plays first.
     const toPlay = firstColor ?? (black.length > 0 && white.length === 0 ? WHITE : BLACK);
     this.states = [{ board, toPlay, move: null, captured: [], prisoners: { black: 0, white: 0 } }];
   }
@@ -54,7 +55,7 @@ export class Game {
     return this.states[this.cursor] as GameState;
   }
 
-  /** 현재 화면의 수 번호(0 = 시작 국면) */
+  /** Move number currently shown (0 = starting position) */
   get moveNumber(): number {
     return this.cursor;
   }
@@ -67,12 +68,12 @@ export class Game {
     return this.cursor < this.states.length - 1;
   }
 
-  /** 처음부터 현재 cursor까지의 수 */
+  /** Moves from the start up to the current cursor */
   get moves(): Move[] {
     return this.states.slice(1, this.cursor + 1).map((s) => s.move as Move);
   }
 
-  /** 전체 수순(cursor 뒤 포함) */
+  /** The full move sequence, including moves after the cursor */
   get allMoves(): Move[] {
     return this.states.slice(1).map((s) => s.move as Move);
   }
@@ -84,7 +85,7 @@ export class Game {
     return !!last && !!prev && last.point === null && prev.point === null;
   }
 
-  /** color를 생략하면 현재 차례의 색으로 둔다. */
+  /** Plays with the current turn's color when color is omitted. */
   play(point: Point, color: Color = this.state.toPlay): MoveResult {
     const current = this.state;
     const previous =
@@ -117,7 +118,7 @@ export class Game {
     });
   }
 
-  /** 마지막 수를 무른다. 재생 중이어도 현재 cursor 이후는 함께 버린다. */
+  /** Takes back the last move. Anything after the current cursor is discarded too. */
   undo(): boolean {
     if (this.cursor === 0) return false;
     this.cursor -= 1;

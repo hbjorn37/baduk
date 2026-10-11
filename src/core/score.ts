@@ -4,13 +4,13 @@ import { BLACK, EMPTY, WHITE } from './types';
 export interface Score {
   black: number;
   white: number;
-  /** 어느 쪽에도 속하지 않는 빈 칸(공배) */
+  /** Empty points that belong to neither side (dame) */
   neutral: number;
 }
 
 /**
- * 영역 계가(중국식): 자기 돌 + 자기 색만 접한 빈 영역.
- * 사석은 판단하지 않으므로, 죽은 돌은 호출 전에 판에서 들어내야 한다.
+ * Area scoring (Chinese rules): a side's stones plus the empty regions bordered only by its color.
+ * Dead stones are not detected, so remove them from the board before calling.
  */
 export function scoreArea(board: Board, komi = 0): Score {
   let black = 0;

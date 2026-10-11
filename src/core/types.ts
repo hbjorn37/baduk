@@ -5,13 +5,13 @@ export const WHITE = 2;
 export type Color = typeof BLACK | typeof WHITE;
 export type Cell = typeof EMPTY | Color;
 
-/** x: 열(왼쪽에서 0), y: 행(위에서 0) */
+/** x: column (0 at the left), y: row (0 at the top) */
 export interface Point {
   x: number;
   y: number;
 }
 
-/** point가 null이면 패스 */
+/** A null point means a pass */
 export interface Move {
   color: Color;
   point: Point | null;

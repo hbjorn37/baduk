@@ -2,7 +2,7 @@ import type { GameState } from '../core/game';
 import { BLACK, EMPTY, WHITE, type Color, type Move, type Point } from '../core/types';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
-const COLUMN_LABELS = 'ABCDEFGHJKLMNOPQRSTUVWXYZ'; // 관례상 I 제외
+const COLUMN_LABELS = 'ABCDEFGHJKLMNOPQRSTUVWXYZ'; // By convention, 'I' is skipped
 
 export interface ViewOptions {
   showStones: boolean;
@@ -10,7 +10,7 @@ export interface ViewOptions {
 }
 
 export interface BoardViewHandlers {
-  /** button: 0 = 좌클릭/터치, 2 = 우클릭 */
+  /** button: 0 = left click / touch, 2 = right click */
   onPoint(point: Point, button: number): void;
 }
 
@@ -38,8 +38,9 @@ export function starPoints(size: number): Point[] {
 }
 
 /**
- * SVG 바둑판. 좌표계는 한 칸 = 1단위이고, 바깥 여백 1단위에 좌표 글자를 둔다.
- * 크기는 CSS(컨테이너 너비)로 정해지므로 별도 리사이즈 코드가 필요 없다.
+ * SVG Go board. One grid cell is one unit in the coordinate system, and the outer
+ * one-unit margin holds the coordinate labels. The rendered size is set by CSS
+ * (container width), so no resize code is needed.
  */
 export class BoardView {
   private svg: SVGSVGElement;
@@ -53,7 +54,7 @@ export class BoardView {
     container: HTMLElement,
     private handlers: BoardViewHandlers,
   ) {
-    this.svg = el('svg', { class: 'board', role: 'img', 'aria-label': '바둑판' });
+    this.svg = el('svg', { class: 'board', role: 'img', 'aria-label': 'Go board' });
     container.replaceChildren(this.svg);
 
     this.svg.addEventListener('pointerup', (e) => {
@@ -77,7 +78,7 @@ export class BoardView {
     });
   }
 
-  /** 미리보기 돌의 색과 놓을 수 있는 칸인지를 갱신한다. */
+  /** Updates the hover preview stone's color and which points accept a stone. */
   setHover(color: Color, canPlace: (p: Point) => boolean): void {
     this.hoverColor = color;
     this.canPlace = canPlace;
@@ -91,7 +92,7 @@ export class BoardView {
     this.stonesLayer.replaceChildren();
     if (!opts.showStones) return;
 
-    // 칸마다 마지막으로 놓인 수 번호
+    // Move number of the last stone placed on each point
     const numbers = new Map<number, number>();
     moves.forEach((m, i) => {
       if (m.point) numbers.set(m.point.y * size + m.point.x, i + 1);
@@ -124,7 +125,7 @@ export class BoardView {
     }
 
     const last = state.move?.point;
-    // 숫자가 보이면 숫자가 곧 마지막 수 표시이므로 링은 겹치지 않게 생략한다.
+    // When numbers are shown they already mark the last move, so skip the ring to avoid overlap.
     if (!opts.showNumbers && last && state.board.get(last) !== EMPTY) {
       this.stonesLayer.append(
         el('circle', {
@@ -219,7 +220,7 @@ export class BoardView {
     this.hover.setAttribute('visibility', 'visible');
   }
 
-  /** 화면 좌표를 viewBox 좌표로 바꿔 가장 가까운 교점을 구한다. 스케일/회전에 안전하다. */
+  /** Maps screen coordinates to the nearest intersection via the viewBox transform; safe under scaling. */
   private pointFromEvent(e: MouseEvent): Point | null {
     const ctm = this.svg.getScreenCTM();
     if (!ctm || this.size === 0) return null;

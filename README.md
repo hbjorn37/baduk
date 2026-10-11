@@ -2,69 +2,69 @@
 
 ![Baduk](docs/images/baduk-1.png)
 
-**바둑(Go/Baduk)** 을 브라우저에서 연습하고 기보를 다루는 웹 앱입니다. 아버지가 온라인으로 편하게 바둑을 두실 수 있도록 2012년에 HTML5와 JavaScript만으로 만들었고, v2.0에서 TypeScript로 전면 개편했습니다.
+**Baduk (Go)** is a web app for practicing the game of Go and working with game records. I first built it in 2012 with plain HTML5 and JavaScript so my father could enjoy the game online, and rewrote it from scratch in TypeScript for v2.0.
 
 **https://hbjorn.dev/baduk/**
 
-## 기능
+## Features
 
-- 흑백 번갈아 두기, 따냄, 자충수 금지, 패(단순 ko) 규칙
-- 돌 색 모드: 자동 / 흑 / 백 / 마우스(좌클릭 백, 우클릭 흑) — 혼자 연습하거나 사활 문제를 놓을 때 편합니다
-- 수순 번호, 마지막 수 표시, 돌 보기/숨기기
-- 무르기, 패스, 영역 계가(덤 포함)
-- 9 / 13 / 19줄 판
-- SGF 열기·저장, 기보 재생(처음 · 이전 · 다음 · 마지막)
-- 대국이 브라우저에 자동 저장되어 새로고침해도 이어집니다
-- PC와 모바일(터치) 지원, 판 크기는 화면 너비에 맞춰 자동 조절, 다크 모드
+- Alternating play, captures, suicide prevention and simple ko
+- Stone color modes: auto / black / white / mouse (left click = white, right click = black), handy for solo practice and setting up problems
+- Move numbers, last-move marker, show/hide stones
+- Undo, pass, area scoring with komi
+- 9×9, 13×13 and 19×19 boards
+- Open and save SGF files; step through a game (first / previous / next / last)
+- The game is saved in the browser and survives a reload
+- Desktop and mobile (touch), board scales to the screen width, dark mode
 
-### 한계
+### Limitations
 
-- 계가는 사석을 판단하지 않습니다. 죽은 돌은 직접 들어낸 뒤 계가하세요.
-- SGF의 변화도는 첫 번째 줄기만 읽습니다.
-- 슈퍼코(superko)는 지원하지 않습니다.
-- 온라인 대국, 채팅, AI는 아직 없습니다.
+- Scoring does not detect dead stones. Remove them by hand before scoring.
+- Only the first variation of an SGF file is read.
+- Superko is not supported.
+- No online play, chat or AI yet.
 
-## 스크린샷
+## Screenshots
 
-<img src="docs/images/baduk-2.png" alt="모바일 화면" width="320" />
+<img src="docs/images/baduk-2.png" alt="Mobile view" width="320" />
 
-## 개발
+## Development
 
-Node.js 20 이상이 필요합니다.
+Requires Node.js 20 or later.
 
 ```sh
 npm install
-npm run dev      # 개발 서버
-npm test         # 단위 테스트
+npm run dev      # development server
+npm test         # unit tests
 npm run lint     # ESLint
-npm run build    # dist/ 에 정적 파일 생성
-npm run preview  # 빌드 결과 미리보기
+npm run build    # type-check and build static files into dist/
+npm run preview  # preview the production build
 ```
 
-### 구조
+### Layout
 
 ```
-src/core/   DOM에 의존하지 않는 순수 TypeScript. 모든 규칙은 여기에 있고 테스트됩니다.
-  board.ts    불변 보드, 덩어리·활로 계산
-  rules.ts    착수 판정(따냄, 자충수, 패)
-  game.ts     수순, 무르기, 기보 이동
-  score.ts    영역 계가
-  sgf.ts      SGF 파서/직렬화
-  record.ts   SGF <-> Game 변환
-src/ui/     SVG 바둑판 렌더링, 입력, localStorage
-src/main.ts 화면과 코어 연결
+src/core/   Pure TypeScript with no DOM access. All game rules live here and are tested.
+  board.ts    immutable board, group and liberty computation
+  rules.ts    move validation (captures, suicide, ko)
+  game.ts     move sequence, undo, record navigation
+  score.ts    area scoring
+  sgf.ts      SGF parser and serializer
+  record.ts   SGF <-> Game conversion
+src/ui/     SVG board rendering, input handling, localStorage
+src/main.ts wires the UI to the core
 ```
 
-런타임 의존성은 없습니다. 화면 계층만 바꾸면 되므로 나중에 React 같은 프레임워크로 옮기기도 쉽습니다.
+There are no runtime dependencies. Only the UI layer would need to change to move to a framework such as React.
 
-### 배포
+### Deployment
 
-`main`에 푸시하면 GitHub Actions가 테스트 후 빌드해 GitHub Pages에 배포합니다. 빌드 결과는 상대 경로라서 어떤 정적 호스팅에 올려도 동작합니다.
+Pushing to `main` runs tests, builds the site and deploys it to GitHub Pages through GitHub Actions. The build uses relative paths, so it works on any static host.
 
-## 버전 규칙
+## Versioning
 
-기본은 `메이저.마이너`(예: `2.0`, `2.1`)이고, 핫픽스일 때만 `2.0.1`처럼 세 자리를 씁니다. `package.json`은 npm 규격상 `2.0.0` 형식으로 적습니다. 변경 내역은 [CHANGES](CHANGES)를 보세요.
+Versions are `major.minor` (for example `2.0`, `2.1`); a three-part version such as `2.0.1` is used only for hotfixes. `package.json` uses the `2.0.0` form because npm requires semver. See [CHANGES](CHANGES) for the history.
 
-## 라이선스
+## License
 
-[GPL-3.0-or-later](LICENSE). 제작자는 [AUTHORS](AUTHORS)를 보세요.
+[GPL-3.0-or-later](LICENSE). See [AUTHORS](AUTHORS) for credits.

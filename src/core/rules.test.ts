@@ -5,9 +5,9 @@ import { play } from './rules';
 import { scoreArea } from './score';
 import { BLACK, EMPTY, WHITE, type Color, type Point } from './types';
 
-/** 'X'=흑, 'O'=백, '.'=빈 칸 문자열로 보드를 만든다. */
+/** Builds a board from strings: 'X' = black, 'O' = white, '.' = empty. */
 function boardOf(rows: string[]): Board {
-  if (rows.some((r) => r.length !== rows.length)) throw new Error('정방형 보드가 아닙니다');
+  if (rows.some((r) => r.length !== rows.length)) throw new Error('Board must be square');
   const changes: [Point, typeof BLACK | typeof WHITE][] = [];
   rows.forEach((row, y) =>
     [...row].forEach((ch, x) => {
@@ -21,18 +21,18 @@ function boardOf(rows: string[]): Board {
 const at = (x: number, y: number): Point => ({ x, y });
 
 describe('play', () => {
-  it('빈 칸에 둘 수 있다', () => {
+  it('allows a move on an empty point', () => {
     const r = play(Board.empty(9), at(4, 4), BLACK);
     expect(r.ok && r.board.get(at(4, 4))).toBe(BLACK);
   });
 
-  it('보드 밖과 이미 돌이 있는 칸은 거부한다', () => {
+  it('rejects out-of-bounds and occupied points', () => {
     const b = boardOf(['X..', '...', '...']);
     expect(play(b, at(3, 0), BLACK)).toEqual({ ok: false, reason: 'out-of-bounds' });
     expect(play(b, at(0, 0), WHITE)).toEqual({ ok: false, reason: 'occupied' });
   });
 
-  it('활로가 없는 상대 돌을 따낸다 (귀)', () => {
+  it('captures an opponent stone with no liberties (corner)', () => {
     const b = boardOf(['O.', 'X.']);
     const r = play(b, at(1, 0), BLACK);
     expect(r.ok).toBe(true);
@@ -42,28 +42,28 @@ describe('play', () => {
     }
   });
 
-  it('여러 덩어리를 한 수로 동시에 따낸다', () => {
-    // (2,1)에 두면 백 (1,1)과 백 (2,0)이 동시에 활로를 잃는다.
+  it('captures several groups with one move', () => {
+    // Playing (2,1) removes the last liberty of both White (1,1) and White (2,0).
     const r = play(boardOf(['.XO', 'XO.', '.X.']), at(2, 1), BLACK);
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.captured.length).toBe(2);
   });
 
-  it('활로가 없으면 자충수로 거부한다', () => {
+  it('rejects suicide', () => {
     const b = boardOf(['.X.', 'X.X', '.X.']);
     expect(play(b, at(1, 1), WHITE)).toEqual({ ok: false, reason: 'suicide' });
   });
 
-  it('따내는 수는 자충이 아니다', () => {
-    // 흑 (0,0)은 그 자리만으로는 활로가 없지만 백 두 점을 따내므로 합법이다.
+  it('does not treat a capturing move as suicide', () => {
+    // Black (0,0) has no liberty on its own, but it captures two White stones, so it is legal.
     const r = play(boardOf(['.OX', 'OXX', 'XX.']), at(0, 0), BLACK);
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.captured.length).toBe(2);
   });
 
-  it('단순 패: 직전 국면을 되풀이하는 수는 금지', () => {
+  it('simple ko: forbids repeating the previous position', () => {
     //  .XO.
-    //  XO.O   흑이 (2,1)에 두어 백 (1,1)을 따냄 -> 백이 (1,1)에 되따내면 패
+    //  XO.O   Black plays (2,1) capturing White (1,1) -> White retaking at (1,1) is ko
     //  .XO.
     const before = boardOf(['.XO.', 'XO.O', '.XO.', '....']);
     const afterBlack = play(before, at(2, 1), BLACK, undefined);
@@ -71,14 +71,14 @@ describe('play', () => {
     if (!afterBlack.ok) return;
     const retake = play(afterBlack.board, at(1, 1), WHITE, before);
     expect(retake).toEqual({ ok: false, reason: 'ko' });
-    // 한 수 건너뛴 뒤에는 둘 수 있다 (previous가 달라짐)
+    // After a move elsewhere it is allowed (previous differs)
     const other = play(afterBlack.board, at(1, 1), WHITE, afterBlack.board);
     expect(other.ok).toBe(true);
   });
 });
 
 describe('Game', () => {
-  it('흑백이 번갈아 두고 따낸 돌 수를 센다', () => {
+  it('alternates colors and counts prisoners', () => {
     const g = new Game({ size: 9 });
     expect(g.state.toPlay).toBe(BLACK);
     g.play(at(1, 0)); // B
@@ -89,7 +89,7 @@ describe('Game', () => {
     expect(g.state.toPlay).toBe(WHITE);
   });
 
-  it('무르기는 돌, 차례, 따낸 돌을 되돌린다', () => {
+  it('undo restores stones, turn and prisoners', () => {
     const g = new Game({ size: 9 });
     g.play(at(1, 0));
     g.play(at(0, 0));
@@ -101,11 +101,11 @@ describe('Game', () => {
     expect(g.moveNumber).toBe(2);
   });
 
-  it('처음에서 무르면 false', () => {
+  it('undo at the start returns false', () => {
     expect(new Game().undo()).toBe(false);
   });
 
-  it('재생 중 새 수를 두면 이후 수순을 버린다', () => {
+  it('playing during replay discards later moves', () => {
     const g = new Game({ size: 9 });
     g.play(at(0, 0));
     g.play(at(1, 1));
@@ -118,7 +118,7 @@ describe('Game', () => {
     expect(g.allMoves.length).toBe(2);
   });
 
-  it('연속 패스 두 번이면 종료', () => {
+  it('two consecutive passes end the game', () => {
     const g = new Game({ size: 9 });
     g.pass();
     expect(g.isOver).toBe(false);
@@ -126,12 +126,12 @@ describe('Game', () => {
     expect(g.isOver).toBe(true);
   });
 
-  it('접바둑은 백이 먼저 둔다', () => {
+  it('White plays first in a handicap game', () => {
     const g = new Game({ size: 9, setup: { black: [at(2, 2), at(6, 6)] } });
     expect(g.state.toPlay).toBe(WHITE);
   });
 
-  it('color 인자로 같은 색을 연속 착수할 수 있다 (연습 모드)', () => {
+  it('the color argument allows consecutive same-color moves (practice mode)', () => {
     const g = new Game({ size: 9 });
     const c: Color = BLACK;
     g.play(at(0, 0), c);
@@ -142,9 +142,9 @@ describe('Game', () => {
 });
 
 describe('scoreArea', () => {
-  it('영역과 덤을 계산한다', () => {
+  it('computes area and komi', () => {
     const b = boardOf(['.X.O.', '.X.O.', '.X.O.', '.X.O.', '.X.O.']);
-    // 흑: 돌 5 + 왼쪽 빈 5 = 10, 백: 돌 5 + 오른쪽 빈 5 = 10, 가운데 5는 공배
+    // Black: 5 stones + 5 empty on the left = 10; White: 5 stones + 5 empty on the right = 10; the middle 5 are dame
     expect(scoreArea(b, 0.5)).toEqual({ black: 10, white: 10.5, neutral: 5 });
   });
 });

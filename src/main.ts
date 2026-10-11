@@ -7,15 +7,15 @@ import { BoardView } from './ui/boardView';
 import { loadOptions, loadSavedGame, saveGame, saveOptions, type ColorMode } from './ui/storage';
 
 const REASONS: Record<IllegalReason, string> = {
-  'out-of-bounds': '판 밖입니다.',
-  occupied: '이미 돌이 놓인 자리입니다.',
-  suicide: '둘 수 없는 자리입니다 (자충수).',
-  ko: '패입니다. 다른 곳에 한 수 둔 뒤 다시 따낼 수 있습니다.',
+  'out-of-bounds': 'Out of bounds.',
+  occupied: 'That point is already occupied.',
+  suicide: 'Illegal move (suicide).',
+  ko: 'Ko: play elsewhere first, then you may retake.',
 };
 
 function $<T extends HTMLElement>(id: string): T {
   const node = document.getElementById(id);
-  if (!node) throw new Error(`#${id} 요소가 없습니다.`);
+  if (!node) throw new Error(`Missing element #${id}.`);
   return node as T;
 }
 
@@ -23,7 +23,7 @@ const options = loadOptions();
 let game = new Game({ size: options.size });
 let info: Record<string, string> = {};
 
-// 이전 세션의 대국 복원 (깨진 데이터는 무시하고 새 대국으로 시작)
+// Restore the previous session's game (ignore corrupt data and start fresh)
 const saved = loadSavedGame();
 if (saved) {
   try {
@@ -32,7 +32,7 @@ if (saved) {
     info = restored.info;
     game.last();
   } catch {
-    /* 무시 */
+    /* ignore */
   }
 }
 
@@ -74,10 +74,10 @@ function update(): void {
   view.render(state, game.moves, options);
   view.setHover(colorFor(0) ?? state.toPlay, (p) => state.board.get(p) === 0);
 
-  const turn = state.toPlay === BLACK ? '흑' : '백';
+  const turn = state.toPlay === BLACK ? 'Black' : 'White';
   $('status').textContent =
-    `${game.isOver ? '대국 종료 · ' : `${turn} 차례 · `}${game.moveNumber}수` +
-    ` · 따낸 돌 흑 ${state.prisoners.black} / 백 ${state.prisoners.white}`;
+    `${game.isOver ? 'Game over · ' : `${turn} to play · `}Move ${game.moveNumber}` +
+    ` · Captures: Black ${state.prisoners.black} / White ${state.prisoners.white}`;
 
   $<HTMLButtonElement>('undo').disabled = !game.canBack || game.canForward;
   $<HTMLButtonElement>('first').disabled = !game.canBack;
@@ -113,9 +113,9 @@ on('new', () => {
 on('score', () => {
   const s = scoreArea(game.state.board, game.komi);
   const diff = Math.abs(s.black - s.white);
-  const result = s.black > s.white ? `흑 ${diff}집 승` : `백 ${diff}집 승`;
+  const result = s.black > s.white ? `Black wins by ${diff}` : `White wins by ${diff}`;
   showMessage(
-    `영역 계가(덤 ${game.komi}): 흑 ${s.black} : 백 ${s.white} → ${result}. 사석은 반영되지 않았습니다.`,
+    `Area score (komi ${game.komi}): Black ${s.black} : White ${s.white} → ${result}. Dead stones are not accounted for.`,
   );
 });
 
@@ -131,7 +131,7 @@ $('save').addEventListener('click', () => {
 $<HTMLInputElement>('open').addEventListener('change', async (e) => {
   const input = e.target as HTMLInputElement;
   const file = input.files?.[0];
-  input.value = ''; // 같은 파일을 다시 열 수 있도록
+  input.value = ''; // allow opening the same file again
   if (!file) return;
   try {
     const loaded = gameFromSgf(await file.text());
@@ -139,14 +139,14 @@ $<HTMLInputElement>('open').addEventListener('change', async (e) => {
     info = loaded.info;
     options.size = game.size;
     $<HTMLSelectElement>('size').value = String(game.size);
-    showMessage(`${file.name}을(를) 열었습니다. ◀ ▶ 로 기보를 넘겨 보세요.`);
+    showMessage(`Opened ${file.name}. Use ◀ ▶ to step through the game.`);
     update();
   } catch (err) {
-    showMessage(`SGF를 열 수 없습니다: ${err instanceof Error ? err.message : String(err)}`);
+    showMessage(`Could not open SGF: ${err instanceof Error ? err.message : String(err)}`);
   }
 });
 
-// 옵션 컨트롤 초기화/바인딩
+// Initialize and bind option controls
 $<HTMLSelectElement>('size').value = String(game.size);
 $<HTMLInputElement>('showStones').checked = options.showStones;
 $<HTMLInputElement>('showNumbers').checked = options.showNumbers;

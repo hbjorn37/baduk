@@ -1,8 +1,8 @@
 import { EMPTY, type Cell, type Point } from './types';
 
 /**
- * 불변 보드. 모든 변경은 새 인스턴스를 반환한다.
- * 칸은 cells[y * size + x]에 저장한다.
+ * Immutable board. Every change returns a new instance.
+ * Cells are stored at cells[y * size + x].
  */
 export class Board {
   private constructor(
@@ -12,7 +12,7 @@ export class Board {
 
   static empty(size: number): Board {
     if (!Number.isInteger(size) || size < 2 || size > 25) {
-      throw new RangeError(`지원하지 않는 보드 크기: ${size}`);
+      throw new RangeError(`Unsupported board size: ${size}`);
     }
     return new Board(size, new Uint8Array(size * size));
   }
@@ -25,7 +25,7 @@ export class Board {
     return this.cells[p.y * this.size + p.x] as Cell;
   }
 
-  /** 지정한 칸들을 바꾼 새 보드를 반환한다. */
+  /** Returns a new board with the given points changed. */
   with(changes: Iterable<[Point, Cell]>): Board {
     const next = this.cells.slice();
     for (const [p, cell] of changes) next[p.y * this.size + p.x] = cell;
@@ -55,7 +55,7 @@ export class Board {
     }
   }
 
-  /** 같은 색(또는 빈 칸끼리) 연결된 덩어리와 그 이웃 빈 칸(활로)을 구한다. */
+  /** Finds the connected group of same-colored (or empty) points and its adjacent empty points (liberties). */
   group(start: Point): { points: Point[]; liberties: Point[] } {
     const color = this.get(start);
     const seen = new Set<number>([start.y * this.size + start.x]);
