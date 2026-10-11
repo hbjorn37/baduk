@@ -1,10 +1,10 @@
-# baduk-web
+# baduk
 
 ![Baduk](docs/images/baduk-1.png)
 
 **바둑(Go/Baduk)** 을 브라우저에서 연습하고 기보를 다루는 웹 앱입니다. 아버지가 온라인으로 편하게 바둑을 두실 수 있도록 2012년에 HTML5와 JavaScript만으로 만들었고, v2.0에서 TypeScript로 전면 개편했습니다.
 
-**https://hbjorn.dev/baduk-web/**
+**https://hbjorn.dev/baduk/**
 
 ## 기능
 
