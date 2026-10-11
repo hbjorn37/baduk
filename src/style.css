@@ -649,6 +649,9 @@ label.btn:has(+ .file-input:focus-visible) {
   flex-direction: column;
   gap: 6px;
 }
+.variations [role='group'][hidden] {
+  display: none;
+}
 .choices {
   display: flex;
   flex-wrap: wrap;

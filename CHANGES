@@ -1,3 +1,7 @@
+2.2.1 - 2026-10-11
+-------------------
+* Fix: an empty variation group heading was shown in the move panel when there was nothing to choose
+
 2.2 - 2026-10-11
 -------------------
 * Game records are now a tree: SGF variations are read, played, switched between and saved
