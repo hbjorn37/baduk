@@ -10,7 +10,7 @@ Guidance for Claude Code when working in this repository.
 
 ## Project
 
-Baduk (Go) practice board and SGF viewer. Multilingual (en, ko, ja, zh-CN, zh-TW), light/dark/system themes, keyboard and screen reader accessible. TypeScript + Vite static site with **zero runtime dependencies**. Deployed to GitHub Pages at https://hbjorn.dev/baduk/ by GitHub Actions on every push to `main`.
+Baduk (Go) practice board and SGF viewer. Multilingual (en, ko, ja, zh-CN, zh-TW), light/dark/system themes, keyboard and screen reader accessible. TypeScript + Vite static site with **zero runtime dependencies**. Deployed to GitHub Pages at https://hbjorn.dev/baduk/ by GitHub Actions on every push to `main`. The `cleanup-deployments` workflow then removes older deployment records, keeping only the newest.
 
 ## Commands
 
