@@ -1,3 +1,13 @@
+2.0 - 2026-10-11
+-------------------
+* TypeScript + Vite로 전면 재작성. jQuery, requirejs, Express 제거, 런타임 의존성 없음
+* 규칙 엔진 추가: 따냄, 자충수 금지, 패
+* SGF 열기/저장, 기보 재생, 영역 계가, 패스, 9/13/19줄
+* SVG 바둑판, 화면 너비에 맞춘 반응형, 터치 지원, 다크 모드
+* 정적 사이트로 GitHub Pages에 배포
+* AdSense, 크롬 앱(crx), 서버 코드 제거
+* 이전 버전의 localStorage 옵션은 이어받지 않음
+
 1.0 - August 07, 2012 (Unknown)
 -------------------
 * baduk released

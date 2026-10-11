@@ -1,0 +1,178 @@
+:root {
+  color-scheme: light dark;
+  --bg: #f4efe6;
+  --fg: #222;
+  --panel: #fffaf0;
+  --border: #c9bda6;
+  --accent: #8a5a2b;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1d1b18;
+    --fg: #eee;
+    --panel: #2a2723;
+    --border: #4a443b;
+    --accent: #d9a25f;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family:
+    system-ui,
+    -apple-system,
+    'Noto Sans KR',
+    sans-serif;
+}
+header,
+footer {
+  text-align: center;
+  padding: 0.5rem 1rem;
+}
+h1 {
+  margin: 0.4rem 0;
+  font-size: 1.4rem;
+}
+h1 small {
+  font-weight: normal;
+  opacity: 0.6;
+  font-size: 0.7em;
+}
+
+main {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+@media (min-width: 860px) {
+  main {
+    grid-template-columns: minmax(0, 760px) 280px;
+    justify-content: center;
+    align-items: start;
+  }
+}
+
+.board-wrap {
+  min-width: 0;
+}
+#board svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: manipulation;
+  user-select: none;
+}
+.board .wood {
+  fill: #dcb35c;
+}
+.board .lines line {
+  stroke: #000;
+  stroke-width: 0.03;
+}
+.board .star {
+  fill: #000;
+}
+.board .labels text {
+  font-size: 0.32px;
+  fill: #333;
+}
+.board .hover {
+  opacity: 0.45;
+  pointer-events: none;
+}
+.board .stone {
+  filter: drop-shadow(0.03px 0.04px 0.03px rgba(0, 0, 0, 0.5));
+  pointer-events: none;
+}
+.board .num {
+  font-size: 0.42px;
+  font-weight: bold;
+  pointer-events: none;
+}
+.board .num.on-black {
+  fill: #fff;
+}
+.board .num.on-white {
+  fill: #000;
+}
+.board .last {
+  fill: none;
+  stroke-width: 0.06;
+  pointer-events: none;
+}
+.board .last.on-black {
+  stroke: #fff;
+}
+.board .last.on-white {
+  stroke: #000;
+}
+
+#status {
+  margin: 0.5rem 0 0;
+  font-weight: 600;
+}
+#message {
+  margin: 0.25rem 0 0;
+  min-height: 1.4em;
+  color: #b3261e;
+}
+
+.panel {
+  display: grid;
+  gap: 0.75rem;
+}
+fieldset {
+  margin: 0;
+  padding: 0.6rem 0.8rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+legend {
+  padding: 0 0.4rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+fieldset label:not(.button) {
+  display: block;
+  padding: 0.2rem 0;
+}
+.row {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin: 0.25rem 0;
+}
+
+button,
+select,
+label.button {
+  font: inherit;
+  padding: 0.45rem 0.8rem;
+  min-height: 40px;
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+button:hover:not(:disabled),
+label.button:hover {
+  border-color: var(--accent);
+}
+button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

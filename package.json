@@ -1,10 +1,27 @@
 {
-  "name": "gizrak-baduk",
-  "version": "0.0.1",
-  "dependencies": {
-    "express": ">=3.11.0",
-    "ejs": "*",
-    "method-override": "*",
-    "errorhandler": "*"
+  "name": "baduk-web",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "license": "GPL-3.0-or-later",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "lint": "eslint src",
+    "format": "prettier --write src index.html"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.12.0",
+    "prettier": "^3.9.10",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.71.1",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.3"
   }
 }

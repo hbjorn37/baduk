@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>바둑 Baduk</title>
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/images/apple-touch-icon.png" />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <header>
+      <h1>바둑 <small>Baduk (Go)</small></h1>
+    </header>
+    <main>
+      <section class="board-wrap">
+        <div id="board"></div>
+        <p id="status" role="status" aria-live="polite"></p>
+        <p id="message" role="alert"></p>
+      </section>
+
+      <section class="panel">
+        <fieldset>
+          <legend>대국</legend>
+          <div class="row">
+            <button id="undo" type="button">무르기</button>
+            <button id="pass" type="button">패스</button>
+            <button id="score" type="button">계가</button>
+          </div>
+          <div class="row">
+            <select id="size" aria-label="판 크기">
+              <option value="19">19줄</option>
+              <option value="13">13줄</option>
+              <option value="9">9줄</option>
+            </select>
+            <button id="new" type="button">새 대국</button>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>기보</legend>
+          <div class="row">
+            <button id="first" type="button" aria-label="처음">⏮</button>
+            <button id="back" type="button" aria-label="이전">◀</button>
+            <button id="forward" type="button" aria-label="다음">▶</button>
+            <button id="last" type="button" aria-label="마지막">⏭</button>
+          </div>
+          <div class="row">
+            <label class="button"
+              >SGF 열기<input id="open" type="file" accept=".sgf,text/plain" hidden
+            /></label>
+            <button id="save" type="button">SGF 저장</button>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>돌 색</legend>
+          <label><input type="radio" name="color" value="auto" checked /> 자동(번갈아)</label>
+          <label><input type="radio" name="color" value="black" /> 흑</label>
+          <label><input type="radio" name="color" value="white" /> 백</label>
+          <label><input type="radio" name="color" value="mouse" /> 마우스 (좌=백, 우=흑)</label>
+        </fieldset>
+
+        <fieldset>
+          <legend>표시</legend>
+          <label><input id="showStones" type="checkbox" checked /> 돌 보기</label>
+          <label><input id="showNumbers" type="checkbox" checked /> 수순 번호</label>
+        </fieldset>
+      </section>
+    </main>
+    <footer><p>© 2013–2026 gizrak · GPL-3.0</p></footer>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
