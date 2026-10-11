@@ -83,7 +83,7 @@ Every user-visible string lives in `src/i18n/`. `en.ts` is the source of truth; 
 
 ### Deployment
 
-Pushing to `main` runs tests, builds the site and deploys it to GitHub Pages through GitHub Actions. The build uses relative paths, so it works on any static host.
+Pushing to `main` runs tests, builds the site and deploys it to GitHub Pages through GitHub Actions. The build uses relative paths, so it works on any static host. After each successful deploy, a second workflow deletes older deployment records and keeps only the live one.
 
 ## Versioning
 
