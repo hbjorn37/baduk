@@ -8,6 +8,41 @@
 * Removed AdSense, the Chrome app (crx) and the server code
 * Options saved by the previous version in localStorage are not migrated
 
-1.0 - August 07, 2012 (Unknown)
+1.1 - 2020-09-08
 -------------------
-* baduk released
+* jQuery upgraded from 1.8.0 to 1.12.4 (CDN)
+* Google AdSense script added
+* Updated AUTHORS; removed the Eclipse project file
+
+1.0 - 2020-07-02
+-------------------
+* Express upgraded (body-parser, method-override and errorhandler as separate packages)
+* Renamed "badook" to "baduk" everywhere, including the Chrome app manifest
+
+0.6 - 2014-04-04
+-------------------
+* English UI, wood pattern board background, responsive board width
+* AdSense removed again; README rewritten
+
+0.5 - 2013-11-26
+-------------------
+* Heroku deployment (Procfile); board API reworked to (boardSize, gridCount)
+* Resize buttons, orientation change handling; AdSense added
+
+0.4 - 2013-06-06
+-------------------
+* Move back, show/hide stones, message module, stone size scales with the board
+
+0.3 - 2013-06-04
+-------------------
+* RequireJS modules: board.js split into board, event and option modules
+
+0.2 - 2013-06-03
+-------------------
+* Ported from Google App Engine to Node.js + Express 3
+
+0.1 - 2013-05-02
+-------------------
+* Initial import of the original "badook" project (Google App Engine, canvas board)
+
+Versions 0.1 - 1.1 were backfilled on 2026-10-11 from the git history; see the GitHub releases for details.

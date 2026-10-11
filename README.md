@@ -63,7 +63,7 @@ Pushing to `main` runs tests, builds the site and deploys it to GitHub Pages thr
 
 ## Versioning
 
-Versions are `major.minor` (for example `2.0`, `2.1`); a three-part version such as `2.0.1` is used only for hotfixes. `package.json` uses the `2.0.0` form because npm requires semver. See [CHANGES](CHANGES) for the history.
+Releases use two-part versions by default, for example `v1.2` or `v2.0`. A three-part version such as `v1.2.1` is used only for a hotfix. `package.json` uses the semver form (`1.2.0`, `1.2.1`) because npm requires it. See [CHANGES](CHANGES) and the [GitHub releases](https://github.com/hbjorn37/baduk/releases) for the history.
 
 ## License
 

@@ -40,9 +40,11 @@ Run `npm run lint && npm test && npm run build` before committing; CI runs the s
 
 ## Versioning and releases
 
-- Versions are `major.minor` (e.g. `2.0`, `2.1`). A three-part version (e.g. `2.0.1`) is used **only for hotfixes**.
-- Git tags and GitHub releases use `v2.0` / `v2.0.1`. `package.json` uses the semver form (`2.0.0`, `2.1.0`, `2.0.1`) because npm requires it.
+- **Default: two-part versions** such as `v1.2` or `v2.0`. **Use a three-part version such as `v1.2.1` only for a hotfix** to an already released version. Never use three parts for a regular release.
+- Git tags and GitHub releases use the `v` prefix (`v1.2`, `v1.2.1`). `package.json` uses the semver form (`1.2.0`, `1.2.1`) because npm requires it.
+- Create annotated tags and a GitHub release for every version. Release titles look like `v1.2: Short summary`, and the notes are detailed: summary, grouped changes, commit list and a compare link to the previous tag. Mark only the newest release as latest.
 - Update `CHANGES` for every release.
+- Releases `v0.1`-`v1.1` were backfilled from the git history. Documentation-only commits do not get their own version.
 
 ## Git
 
