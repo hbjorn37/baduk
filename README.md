@@ -2,7 +2,7 @@
 
 ![Baduk](docs/images/baduk-1.png)
 
-**Baduk (Go)** is a web app for practicing the game of Go and working with game records. I first built it in 2012 with plain HTML5 and JavaScript so my father could enjoy the game online, and rewrote it from scratch in TypeScript for v2.0. v2.1 adds multiple languages, themes and a new accessible design.
+**Baduk (Go)** is a web app for practicing the game of Go and working with game records. I first built it in 2012 with plain HTML5 and JavaScript so my father could enjoy the game online, and rewrote it from scratch in TypeScript for v2.0. v2.1 added multiple languages, themes and a new accessible design, and v2.2 adds richer game records: a move list, variations, comments and editable game information.
 
 **https://hbjorn.dev/baduk/**
 
@@ -16,7 +16,11 @@
 - 9×9, 13×13 and 19×19 boards
 
 **Game records**
-- Open and save SGF files
+- Open and save SGF files, including variations, comments and game information
+- Move list: every move with its coordinates; click or use the arrow keys to jump to a move
+- Variations: play a different move during replay to start a new line, and switch between lines at any branch
+- Comments on every move (and the starting position), stored in the SGF `C` property
+- Game info editor: players, ranks, date, event, place, result and komi
 - Step through a game with the first / previous / next / last buttons or a slider
 - The game is saved in the browser and survives a reload
 
@@ -33,7 +37,7 @@
 ### Limitations
 
 - Scoring does not detect dead stones. Remove them by hand before scoring.
-- Only the first variation of an SGF file is read.
+- Only the first game of an SGF file is read, and setup stones or markup inside the game tree are ignored. A variation is cut off at its first illegal move.
 - Superko is not supported.
 - No online play, chat or AI yet.
 

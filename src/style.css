@@ -562,6 +562,142 @@ label.btn:has(+ .file-input:focus-visible) {
   cursor: not-allowed;
 }
 
+/* ---------- Game record: summary, move list, variations, comment ---------- */
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  overflow-wrap: anywhere;
+}
+.summary p {
+  margin: 0;
+}
+.summary-main {
+  font-weight: 700;
+}
+.summary-sub {
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.move-list {
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  gap: 4px;
+  max-height: 208px;
+  overflow-y: auto;
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.move-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 36px;
+  padding: 4px 8px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+  cursor: pointer;
+}
+.move-item:hover {
+  background: var(--surface-2);
+}
+.move-item[aria-current='step'] {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  font-weight: 700;
+}
+.move-item .dot {
+  width: 12px;
+  height: 12px;
+}
+.move-item .num {
+  min-width: 2ch;
+  color: var(--muted);
+}
+.move-item .mark {
+  width: 14px;
+  height: 14px;
+  margin-left: auto;
+  color: var(--muted);
+}
+.move-item .mark + .mark {
+  margin-left: 0;
+}
+
+.variations {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.variations [role='group'] {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.choices .btn {
+  min-height: 36px;
+  padding: 4px 12px;
+  gap: 6px;
+  font-size: 0.875rem;
+}
+.choices .btn[aria-current='true'] {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.input {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+textarea.input {
+  resize: vertical;
+  min-height: 88px;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.form-grid .hint {
+  grid-column: 1 / -1;
+  margin: -6px 0 0;
+}
+.hint {
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+@media (max-width: 520px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ---------- Dialogs ---------- */
 .dialog {
   width: min(520px, calc(100vw - 24px));

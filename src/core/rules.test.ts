@@ -105,7 +105,7 @@ describe('Game', () => {
     expect(new Game().undo()).toBe(false);
   });
 
-  it('playing during replay discards later moves', () => {
+  it('playing a different move during replay starts a variation', () => {
     const g = new Game({ size: 9 });
     g.play(at(0, 0));
     g.play(at(1, 1));
@@ -116,6 +116,58 @@ describe('Game', () => {
     g.play(at(5, 5));
     expect(g.canForward).toBe(false);
     expect(g.allMoves.length).toBe(2);
+    expect(g.alternatives.moves.length).toBe(2);
+    expect(g.alternatives.index).toBe(1);
+    // The old line is still there.
+    g.selectAlternative(0);
+    expect(g.allMoves.length).toBe(3);
+    expect(g.moveNumber).toBe(2);
+  });
+
+  it('replaying an existing move follows it instead of adding a duplicate', () => {
+    const g = new Game({ size: 9 });
+    g.play(at(0, 0));
+    g.play(at(1, 1));
+    g.back();
+    g.play(at(1, 1));
+    expect(g.alternatives.moves.length).toBe(1);
+    expect(g.moveNumber).toBe(2);
+  });
+
+  it('keeps the line stable while scrubbing through a variation', () => {
+    const g = new Game({ size: 9 });
+    g.play(at(0, 0));
+    g.play(at(1, 1));
+    g.back();
+    g.play(at(2, 2));
+    g.play(at(3, 3));
+    expect(g.totalMoves).toBe(3);
+    g.goTo(0);
+    expect(g.totalMoves).toBe(3);
+    g.goTo(3);
+    expect(g.moves[1]?.point).toEqual(at(2, 2));
+  });
+
+  it('undo removes only the current variation', () => {
+    const g = new Game({ size: 9 });
+    g.play(at(0, 0));
+    g.play(at(1, 1));
+    g.back();
+    g.play(at(2, 2));
+    expect(g.undo()).toBe(true);
+    expect(g.moveNumber).toBe(1);
+    expect(g.nextChoices.moves).toEqual([{ color: WHITE, point: at(1, 1) }]);
+  });
+
+  it('stores a comment per position', () => {
+    const g = new Game({ size: 9 });
+    g.comment = 'start';
+    g.play(at(0, 0));
+    expect(g.comment).toBe('');
+    g.comment = 'first';
+    expect(g.line[0]?.hasComment).toBe(true);
+    g.first();
+    expect(g.comment).toBe('start');
   });
 
   it('goTo jumps within the record and clamps out-of-range values', () => {

@@ -1,5 +1,5 @@
 import { SgfError } from './errors';
-import { BLACK, WHITE, type Color, type Move, type Point } from './types';
+import { BLACK, WHITE, type Color, type Move, type MoveNode, type Point } from './types';
 
 export interface SgfGame {
   size: number;
@@ -7,8 +7,17 @@ export interface SgfGame {
   /** Named metadata such as PB, PW, RE, DT, GN */
   info: Record<string, string>;
   setup: { black: Point[]; white: Point[] };
-  /** Main-line moves (variations are ignored) */
-  moves: Move[];
+  /** The record tree: the root holds the starting position's comment, its first child chain is the main line */
+  root: MoveNode;
+}
+
+/** The moves of the main line (the first variation at every branch) */
+export function mainLine(game: SgfGame): Move[] {
+  const moves: Move[] = [];
+  for (let n = game.root.children[0]; n; n = n.children[0]) {
+    if (n.move) moves.push(n.move);
+  }
+  return moves;
 }
 
 type Props = Record<string, string[]>;
@@ -93,17 +102,38 @@ function parseTree(text: string, start: number): { tree: Tree; end: number } {
   }
 }
 
-/** Flattens the first game's main line (the first variation at each branch) into a node list. */
-function parseMainLine(text: string): Props[] {
+/** Parses the first game of the file into its variation tree. */
+function parseFirstGame(text: string): Tree {
   const open = text.indexOf('(');
   if (open < 0) throw new SgfError('not-sgf', 'Not an SGF file: no "(" found.');
-  const nodes: Props[] = [];
-  let tree: Tree | undefined = parseTree(text, open).tree;
-  while (tree) {
-    nodes.push(...tree.nodes);
-    tree = tree.children[0];
+  return parseTree(text, open).tree;
+}
+
+const MOVE_PROPS: [string, Color][] = [
+  ['B', BLACK],
+  ['W', WHITE],
+];
+
+/** Converts the nodes and variations of a parsed tree into move nodes below `parent`. */
+function attachMoves(tree: Tree, parent: MoveNode, size: number): void {
+  let tail = parent;
+  for (const props of tree.nodes) {
+    for (const [prop, color] of MOVE_PROPS) {
+      const v = props[prop]?.[0];
+      if (v === undefined) continue;
+      const node: MoveNode = {
+        move: { color, point: decodePoint(v, size) },
+        comment: '',
+        children: [],
+      };
+      tail.children.push(node);
+      tail = node;
+    }
+    // A comment on a node without a move belongs to the position before it.
+    const comment = props.C?.[0]?.replace(/\r\n?/g, '\n');
+    if (comment) tail.comment = tail.comment ? `${tail.comment}\n${comment}` : comment;
   }
-  return nodes;
+  for (const child of tree.children) attachMoves(child, tail, size);
 }
 
 /** Expands point properties (AB/AW), including 'aa:cc' rectangle ranges, into all coordinates. */
@@ -125,8 +155,8 @@ function expandPoints(values: string[] | undefined, size: number): Point[] {
 const INFO_KEYS = ['GN', 'PB', 'PW', 'BR', 'WR', 'DT', 'PC', 'RE', 'RU', 'EV', 'GC'];
 
 export function parseSgf(text: string): SgfGame {
-  const nodes = parseMainLine(text);
-  const root = nodes[0];
+  const tree = parseFirstGame(text);
+  const root = tree.nodes[0];
   if (!root) throw new SgfError('no-nodes', 'The SGF contains no nodes.');
 
   const size = Number.parseInt(root.SZ?.[0] ?? '19', 10);
@@ -144,21 +174,35 @@ export function parseSgf(text: string): SgfGame {
   }
 
   const setup = { black: expandPoints(root.AB, size), white: expandPoints(root.AW, size) };
-  const moves: Move[] = [];
-  for (const node of nodes) {
-    for (const [prop, color] of [
-      ['B', BLACK],
-      ['W', WHITE],
-    ] as [string, Color][]) {
-      const v = node[prop]?.[0];
-      if (v !== undefined) moves.push({ color, point: decodePoint(v, size) });
-    }
-  }
-  return { size, komi, info, setup, moves };
+  const start: MoveNode = { move: null, comment: '', children: [] };
+  attachMoves(tree, start, size);
+  return { size, komi, info, setup, root: start };
 }
 
 function escapeValue(value: string): string {
   return value.replace(/[\]\\]/g, '\\$&');
+}
+
+function writeNode(node: MoveNode): string {
+  const { move } = node;
+  let out = ';';
+  if (move) out += `${move.color === BLACK ? 'B' : 'W'}[${encodePoint(move.point)}]`;
+  if (node.comment) out += `C[${escapeValue(node.comment)}]`;
+  return out;
+}
+
+/** Writes everything below a node: a single child continues the sequence, several become variations. */
+function writeBelow(start: MoveNode): string {
+  let out = '';
+  let node = start;
+  while (node.children.length === 1) {
+    node = node.children[0] as MoveNode;
+    out += writeNode(node);
+  }
+  if (node.children.length > 1) {
+    for (const child of node.children) out += `(${writeNode(child)}${writeBelow(child)})`;
+  }
+  return out;
 }
 
 export function serializeSgf(game: SgfGame): string {
@@ -172,8 +216,6 @@ export function serializeSgf(game: SgfGame): string {
   if (game.setup.white.length > 0) {
     root += 'AW' + game.setup.white.map((p) => `[${encodePoint(p)}]`).join('');
   }
-  const body = game.moves
-    .map((m) => `;${m.color === BLACK ? 'B' : 'W'}[${encodePoint(m.point)}]`)
-    .join('');
-  return `(${root}${body})\n`;
+  if (game.root.comment) root += `C[${escapeValue(game.root.comment)}]`;
+  return `(${root}${writeBelow(game.root)})\n`;
 }

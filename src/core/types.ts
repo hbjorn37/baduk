@@ -20,3 +20,13 @@ export interface Move {
 export function opponent(color: Color): Color {
   return color === BLACK ? WHITE : BLACK;
 }
+
+/**
+ * A node of the game record tree. The root has no move (it is the starting position); every
+ * other node is one move. The first child of a node is the main line, the others are variations.
+ */
+export interface MoveNode {
+  move: Move | null;
+  comment: string;
+  children: MoveNode[];
+}

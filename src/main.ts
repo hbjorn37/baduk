@@ -16,6 +16,7 @@ import {
   type Locale,
 } from './i18n';
 import { BoardView } from './ui/boardView';
+import { MoveList, renderChoices } from './ui/moveList';
 import {
   DEFAULT_OPTIONS,
   loadOptions,
@@ -60,6 +61,13 @@ const view = new BoardView($('board'), {
       cell === BLACK ? t('point.black') : cell === WHITE ? t('point.white') : t('point.empty');
     announce(t('announce.cursor', { point: formatPoint(point, game.size), state }));
   },
+});
+
+const moveList = new MoveList($('move-list'), (n) => {
+  game.goTo(n);
+  showMessage('');
+  update();
+  announce(t('announce.moveNow', { n: game.moveNumber }));
 });
 
 // ---------- Helpers ----------
@@ -147,7 +155,70 @@ function update(): void {
     t('record.scrubValue', { n: game.moveNumber, total: game.totalMoves }),
   );
 
+  renderRecord();
   saveGame(sgfFromGame(game, info));
+}
+
+/** Game info summary, move list, variation choices and the comment box. */
+function renderRecord(): void {
+  const named = (name?: string, rank?: string): string => [name, rank].filter(Boolean).join(' ');
+  const players =
+    info.PB || info.PW
+      ? t('info.players', {
+          black: named(info.PB, info.BR) || colorName(BLACK),
+          white: named(info.PW, info.WR) || colorName(WHITE),
+        })
+      : '';
+  const details = [info.GN, info.EV, info.DT, info.PC, info.RE].filter(Boolean).join(' · ');
+  $('summary-players').textContent = players;
+  $('summary-players').hidden = players === '';
+  $('summary-details').textContent = details;
+  $('summary-details').hidden = details === '';
+  $('game-summary').hidden = players === '' && details === '';
+
+  moveList.render(game);
+
+  const next = game.nextChoices;
+  const alt = game.alternatives;
+  const showNext = next.moves.length > 1;
+  const showAlt = alt.moves.length > 1;
+  $('variations').hidden = !showNext && !showAlt;
+  $('next-group').hidden = !showNext;
+  $('alt-group').hidden = !showAlt;
+  renderChoices(
+    $('next-list'),
+    showNext ? next.moves : [],
+    next.index,
+    game.size,
+    (i) => {
+      game.selectNext(i);
+      afterNavigation();
+      moveList.focusCurrent();
+    },
+    false,
+  );
+  renderChoices(
+    $('alt-list'),
+    showAlt ? alt.moves : [],
+    alt.index,
+    game.size,
+    (i) => {
+      game.selectAlternative(i);
+      afterNavigation();
+    },
+    true,
+  );
+
+  $('comment-label').textContent =
+    game.moveNumber === 0 ? t('comment.labelStart') : t('comment.label', { n: game.moveNumber });
+  const box = $<HTMLTextAreaElement>('comment');
+  if (box.value !== game.comment) box.value = game.comment;
+}
+
+function afterNavigation(): void {
+  showMessage('');
+  update();
+  announce(t('announce.moveNow', { n: game.moveNumber }));
 }
 
 function applyLanguage(): void {
@@ -156,6 +227,7 @@ function applyLanguage(): void {
       ? resolveLocale(navigator.languages?.length ? navigator.languages : [navigator.language])
       : options.locale;
   setLocale(locale);
+  moveList.invalidate();
   document.documentElement.lang = locale;
   document.title = t('app.title');
   document.querySelector('meta[name="description"]')?.setAttribute('content', t('app.description'));
@@ -199,6 +271,7 @@ const REASON_KEYS: Record<IllegalReason, `reason.${IllegalReason}`> = {
 
 function place(point: Point, button: number): void {
   const color = colorFor(button) ?? game.state.toPlay;
+  const continuations = game.nextChoices.moves.length;
   const r = game.play(point, colorFor(button));
   if (!r.ok) {
     const text = t(REASON_KEYS[r.reason]);
@@ -207,11 +280,14 @@ function place(point: Point, button: number): void {
     return;
   }
   showMessage('');
+  const startedVariation = continuations > 0 && game.alternatives.moves.length > continuations;
+  if (startedVariation) showMessage(t('msg.variation', { n: game.moveNumber }));
   update();
   const parts = [
     t('announce.played', { color: colorName(color), point: formatPoint(point, game.size) }),
   ];
   if (r.captured.length > 0) parts.push(t('announce.captured', { n: r.captured.length }));
+  if (startedVariation) parts.push(t('msg.variation', { n: game.moveNumber }));
   announce(parts.join(' '));
 }
 
@@ -325,6 +401,42 @@ $<HTMLInputElement>('open').addEventListener('change', async (e) => {
   } catch (err) {
     showMessage(t('msg.openFailed', { reason: describeError(err) }), 'error');
   }
+});
+
+// ---------- Comments and game info ----------
+
+$<HTMLTextAreaElement>('comment').addEventListener('input', (e) => {
+  game.comment = (e.target as HTMLTextAreaElement).value;
+  update();
+});
+
+const INFO_FIELDS = ['GN', 'EV', 'DT', 'PC', 'PB', 'BR', 'PW', 'WR', 'RE'] as const;
+const infoDialog = $<HTMLDialogElement>('info-dialog');
+
+$('edit-info').addEventListener('click', () => {
+  for (const key of INFO_FIELDS) $<HTMLInputElement>(`info-${key}`).value = info[key] ?? '';
+  $<HTMLInputElement>('info-KM').value = String(game.komi);
+  infoDialog.returnValue = '';
+  infoDialog.showModal();
+});
+$('info-cancel').addEventListener('click', () => infoDialog.close());
+infoDialog.addEventListener('click', (e) => {
+  if (e.target === infoDialog) infoDialog.close();
+});
+infoDialog.addEventListener('close', () => {
+  if (infoDialog.returnValue !== 'ok') return;
+  const next = { ...info };
+  for (const key of INFO_FIELDS) {
+    const value = $<HTMLInputElement>(`info-${key}`).value.trim();
+    if (value) next[key] = value;
+    else delete next[key];
+  }
+  info = next;
+  const komi = Number.parseFloat($<HTMLInputElement>('info-KM').value);
+  if (Number.isFinite(komi)) game.komi = Math.max(-100, Math.min(100, komi));
+  update();
+  showMessage(t('info.updated'));
+  announce(t('info.updated'));
 });
 
 // ---------- Keyboard shortcuts (while the board has focus) ----------

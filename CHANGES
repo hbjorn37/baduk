@@ -1,3 +1,13 @@
+2.2 - 2026-10-11
+-------------------
+* Game records are now a tree: SGF variations are read, played, switched between and saved
+* Playing a different move during replay starts a new variation instead of discarding the rest of the game
+* New move list with coordinates, variation and comment markers; click or use the arrow keys to jump to a move
+* Variations panel to switch between alternatives at any branch
+* Comments on every move and on the starting position (SGF `C` property)
+* Game information editor: game name, event, date, place, players, ranks, result and komi, shown above the record
+* All new text is available in English, Korean, Japanese, Simplified and Traditional Chinese
+
 2.1 - 2026-10-11
 -------------------
 * Multilingual UI: English, Korean, Japanese, Simplified and Traditional Chinese; chosen automatically from the browser language and changeable in Settings
